@@ -10,4 +10,10 @@ import org.springframework.data.repository.query.Param;
 
 public interface PacienteRepository extends JpaRepository <Paciente,Integer> {
 
+
+
+
+
+
+
 }
