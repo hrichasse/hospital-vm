@@ -27,7 +27,10 @@ public class Paciente {
     @Column(nullable = false)
     private String apellidos;
 
-    @Column(nullable = true)
+    @Column(nullable = false)
     private Date fechaNacimiento;
+
+    @Column(nullable = false)
+    private String correo;
 
 }
