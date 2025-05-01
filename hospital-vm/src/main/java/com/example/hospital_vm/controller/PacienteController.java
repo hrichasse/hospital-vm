@@ -35,12 +35,10 @@ public class PacienteController {
     }
     
     @GetMapping("/listar")
-    public List <Paciente> () {
+    public List <Paciente> listarPacientes() {
         return new String();
     }
     
-
-
 
     @GetMapping("/{id}")
     public ResponseEntity <?> getPatientById (@PathVariable Integer id) {
