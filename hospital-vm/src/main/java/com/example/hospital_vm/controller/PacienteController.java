@@ -72,8 +72,8 @@ public class PacienteController {
     //         errorBody.put("timestamp",LocalDateTime.now().toString());
 
     //         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-    //                     .body(errorBody);
     //       }
+    //                     .body(errorBody);
     
 
 
