@@ -11,6 +11,7 @@ import java.util.Optional;
 
 
 @Service
+@Transactional
 public class PacienteService {
 
 @Autowired
@@ -20,11 +21,13 @@ public List <Paciente> findAll(){
     return pacienteRepository.findAll();
 }
 
-public Optional <Paciente> getPatientById(int id){
+public Optional <Paciente> getPacientePorId(int id){
     return pacienteRepository.findById(id);
 }
 
-
+public Paciente save(Paciente paciente){
+    return pacienteRepository.save(paciente);
+}
 
 
 
