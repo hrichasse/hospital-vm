@@ -14,21 +14,27 @@ import java.util.Optional;
 @Transactional
 public class PacienteService {
 
-@Autowired
-private PacienteRepository pacienteRepository;
+    @Autowired
+    private PacienteRepository pacienteRepository;
 
-public List <Paciente> findAll(){
-    return pacienteRepository.findAll();
-}
+    public List<Paciente> findAll() {
+        return pacienteRepository.findAll();
+    }
 
-public Optional <Paciente> getPacientePorId(int id){
-    return pacienteRepository.findById(id);
-}
+    public Optional<Paciente> getPacientePorId(int id) {
+        return pacienteRepository.findById(id);
+    }
 
-public Paciente save(Paciente paciente){
-    return pacienteRepository.save(paciente);
-}
+    public Paciente getPacientePorId2(int id) {
+        return pacienteRepository.findById(id).orElse(null); // Mejor manejo del Optional
+    }
 
+    public Paciente save(Paciente paciente) {
+        return pacienteRepository.save(paciente);
+    }
 
+    public boolean existePacienteConRut(String rut, int idActual) {
+        return pacienteRepository.existsByRutAndIdNot(rut, idActual);
+    }
 
 }

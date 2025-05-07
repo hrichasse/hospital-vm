@@ -10,7 +10,8 @@ import java.util.List;
 
 @Repository
 public interface PacienteRepository extends JpaRepository <Paciente,Integer> {
-
+    boolean existsByRut(String rut);
+    boolean existsByRutAndIdNot(String rut, int id);  // Corregido: añadido parámetro id
 
 
 }
