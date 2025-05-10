@@ -3,168 +3,128 @@ package com.example.hospital_vm.controller;
 import com.example.hospital_vm.model.Paciente;
 import com.example.hospital_vm.service.PacienteService;
 
-import jakarta.validation.Valid;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.dao.DataIntegrityViolationException;
+
+
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import org.springframework.web.bind.annotation.RequestParam;
+
 
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Optional;
-import java.net.URI;
 import java.time.LocalDateTime;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import java.net.URI;
+
 
 
 
 @RestController
 @RequestMapping("/api/v1/pacientes")
-
 public class PacienteController {
 
-    private final PacienteService pacienteService;
+    @Autowired
+    private PacienteService pacienteService;
 
-    public PacienteController(PacienteService pacienteService){
-        this.pacienteService = pacienteService;
+    @GetMapping
+    public String saludo() {
+        return "Hola Mundo";
     }
 
+    @GetMapping("/listar")
+    public List<Paciente> listarPacientes(){
+        return pacienteService.findAll();
+    }
     
-    
-    @GetMapping("/listar-pacientes")
-    public ResponseEntity<List<Paciente>> listar(){
-        try{
-            List<Paciente> pacientes = pacienteService.findAll();
 
-            return pacientes.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(pacientes);
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getPatientById(@PathVariable Integer id){
 
-            // if(pacientes.isEmpty()){
-            //     return ResponseEntity.noContent().build();
-            // }
-            //return ResponseEntity.ok(pacientes);
-        }catch(Exception ex){
-            return ResponseEntity.internalServerError().build();
+        Optional<Paciente> paciente = pacienteService.getPatientById(id);
+
+        if(paciente.isPresent()){
+            //Retornar una respuesta exitosa
+            return ResponseEntity.ok()
+                    .header("mi-encabeza","valor")
+                    .body(paciente.get());
+        }else{
+            //Respuesta de error con cuerpo personalizado
+            Map<String,String> errorBody= new HashMap<>();
+            errorBody.put("message","No se encontró el paciente con id: " + id);
+            errorBody.put("status","404");
+            errorBody.put("timestamp",LocalDateTime.now().toString());
+
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(errorBody);
         }
     }
-
+    
     @PostMapping
-    public ResponseEntity<?> save(@Valid @RequestBody Paciente paciente, BindingResult bindingResult) {
-        try {
-            // Verificar si hay errores de validación antes de procesar
-            if (bindingResult.hasErrors()) {
-                Map<String, String> errores = new HashMap<>();
-                for (FieldError error : bindingResult.getFieldErrors()) {
-                    errores.put(error.getField(), error.getDefaultMessage());
-                }
-                return ResponseEntity.badRequest().body(errores);
-            }
+    public ResponseEntity<?> save(@RequestBody Paciente paciente){
+        try{
 
             Paciente pacienteGuardado = pacienteService.save(paciente);
-            
+
+            //Uri del nuevo recurso creado 
             URI location = ServletUriComponentsBuilder
-                    .fromCurrentRequest()
-                    .path("/{id}")
-                    .buildAndExpand(pacienteGuardado.getId())
-                    .toUri();
+                        .fromCurrentRequest()
+                        .path("/{id}")
+                        .buildAndExpand(pacienteGuardado.getId_paciente())
+                        .toUri();
 
             return ResponseEntity
-                    .created(location)
-                    .body(pacienteGuardado);
+                        .created(location)//Código 201 created
+                        .body(pacienteGuardado);
+                        
 
-        } catch (DataIntegrityViolationException e) {
-            Map<String, String> error = new HashMap<>();
-            
-            if (e.getMessage() != null && e.getMessage().contains("rut")) {
-                error.put("message", "El RUT ya está registrado");
-            } else {
-                error.put("message", "El correo electrónico ya está registrado");
-            }
-            
-            return ResponseEntity
-                    .status(HttpStatus.CONFLICT)
-                    .body(error);
+        }catch(DataIntegrityViolationException e){
+            Map<String,String> error = new HashMap<>();
+            error.put("message","El email ya está registrado");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(error);//404
         }
     }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<?> update(
-            @PathVariable int id,
-            @Valid @RequestBody Paciente pacienteActualizado,
-            BindingResult bindingResult) {
     
-        try {
-            // 1. Validar los datos de entrada
-            if (bindingResult.hasErrors()) {
-                Map<String, String> errores = new HashMap<>();
-                bindingResult.getFieldErrors().forEach(error -> 
-                    errores.put(error.getField(), error.getDefaultMessage()));
-                return ResponseEntity.badRequest().body(errores);
-            }
+    @PutMapping("/{id}")
+    public ResponseEntity<Paciente> update(@PathVariable int id,@RequestBody Paciente paciente){
+        try{
 
-            // 2. Verificar si el paciente existe
-            Paciente pacienteExistente = pacienteService.getPacientePorId2(id);
-            if (pacienteExistente == null) {
-                return ResponseEntity.notFound().build();
-            }
+            Paciente pac = pacienteService.getPatientById2(id);
+            pac.setId_paciente(id);
+            pac.setRut(paciente.getRut());
+            pac.setNombres(paciente.getNombres());
+            pac.setApellidos(paciente.getApellidos());
+            pac.setFechaNacimiento(paciente.getFechaNacimiento());
+            pac.setCorreo(paciente.getCorreo());
 
-            // 3. Validación estricta del RUT
-            if (pacienteActualizado.getRut() != null) {
-                // Caso 1: Se intenta cambiar el RUT
-                if (!pacienteActualizado.getRut().equals(pacienteExistente.getRut())) {
-                    // Verificar si el nuevo RUT ya existe en OTRO paciente (excluyendo el actual)
-                    if (pacienteService.existePacienteConRut(pacienteActualizado.getRut(), id)) {
-                        Map<String, String> error = new HashMap<>();
-                        error.put("message", "El RUT ya está registrado por otro paciente");
-                        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
-                    }
-                    // Si no existe, igual no permitimos cambiar el RUT (campo inmutable)
-                    Map<String, String> error = new HashMap<>();
-                    error.put("message", "El RUT no puede ser modificado");
-                    return ResponseEntity.badRequest().body(error);
-                }
-                // Caso 2: RUT no ha cambiado (es el mismo), no hacemos nada
-            }
+            pacienteService.save(paciente);
+            return ResponseEntity.ok(paciente);
 
-            // 4. Actualizar solo campos permitidos
-            pacienteExistente.setNombres(pacienteActualizado.getNombres());
-            pacienteExistente.setApellidos(pacienteActualizado.getApellidos());
-            pacienteExistente.setFechaNacimiento(pacienteActualizado.getFechaNacimiento());
-            pacienteExistente.setCorreo(pacienteActualizado.getCorreo());
-            
-            // 5. Guardar cambios
-            Paciente pacienteGuardado = pacienteService.save(pacienteExistente);
-            return ResponseEntity.ok(pacienteGuardado);
-
-        } catch (DataIntegrityViolationException e) {
-            // Manejar conflictos de unicidad (email)
-            Map<String, String> error = new HashMap<>();
-            error.put("message", "El correo electrónico ya está registrado");
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
-            
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
+        }catch(Exception ex){
+            return ResponseEntity.notFound().build();
         }
     }
 
-    // @PostMapping
-    // public ResponseEntity<Paciente> guardar(@RequestBody Paciente paciente){
-    //     Paciente pacienteNuevo = pacienteService.save(paciente);
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> eliminar(@PathVariable int id){
+        try{
 
-    //     return ResponseEntity.status(HttpStatus.CREATED).body(pacienteNuevo);
-    // }
+            pacienteService.delete(id);
+            return ResponseEntity.noContent().build();
 
-
-
+        }catch(Exception ex){
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

@@ -1,13 +1,13 @@
 package com.example.hospital_vm.model;
 
 import jakarta.persistence.*;
+
 import jakarta.validation.constraints.*;
+
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Data;
 
-//import jakarta.validation.constraints.NotBlank;
-//import jakarta.validation.constraints.Email;
 
 import java.util.Date;
 
@@ -16,28 +16,26 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
+
 public class Paciente {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private int id_paciente;
 
-    @Column(unique = true,length = 13,nullable = false)
+    @Column(unique=true,length=13,nullable=false)
     private String rut;
 
-    @Column(nullable = false)
-    @NotBlank(message = "Los nombres son obligatorios")
+    @Column(nullable=false)
     private String nombres;
 
-    @NotBlank(message = "Los apellidos son obligatorios")
-    @Column(nullable = false)
+    @Column(nullable=false)
     private String apellidos;
 
-    @Column(nullable = true)
+    @Column(nullable=false)
     private Date fechaNacimiento;
 
-    @Column(nullable = false)
-    @NotBlank(message = "El correo debe ser obligatorio")
-    @Email(message = "Correo no válido, debe teener @")
+    @Column(nullable=false)
     private String correo;
+
 }
